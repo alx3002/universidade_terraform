@@ -35,7 +35,7 @@ resource "random_password" "senha" {
 }
 
 resource "azurerm_linux_virtual_machine" "VM" {
-  name                = "example-machine"
+  name                = "VM-02"
   resource_group_name = azurerm_resource_group.RG.name
   location            = azurerm_resource_group.RG.location
   size                = "Standard_B2s"
@@ -44,7 +44,7 @@ resource "azurerm_linux_virtual_machine" "VM" {
   ]
 
      os_profile {
-     computer_name = "VM-01"
+     computer_name = "VM-02"
      admin_username = "alx3000"
      admin_password = random_password.senha.result
     }
