@@ -109,3 +109,8 @@ output "SNET_Id" {
     description = "Id da SubNet"
     value = azurerm_subnet.SNET.id
 }
+output vm_admin_passsword {
+  description = "Login para usuário admin"
+  value     = random_password.password.result
+  sensitive = true
+}

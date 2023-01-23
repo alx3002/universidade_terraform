@@ -34,7 +34,7 @@ resource "azurerm_subnet" "SNET" {
 
 #Criando a NIC
 resource "azurerm_network_interface" "NIC" {
-  name                = "nic-VM01"
+  name                = "nic-VM-02"
   location            = azurerm_resource_group.RG.location
   resource_group_name = azurerm_resource_group.RG.name
 
@@ -108,4 +108,9 @@ output "RG_Location" {
 output "SNET_Id" {
     description = "Id da SubNet"
     value = azurerm_subnet.SNET.id
+}
+output vm_admin_passsword {
+  description = "Login para usuário admin"
+  value     = random_password.password.result
+  sensitive = true
 }
