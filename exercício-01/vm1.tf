@@ -54,7 +54,7 @@ resource "random_password" "password" {
 
 #Criando STG Account
 resource "azurerm_storage_account" "STGACCOUNT" {
-  name                     = "stglabuniveersidadeterraform"
+  name                     = "stgalexandre4mlab"
   resource_group_name      = azurerm_resource_group.RG.name
   location                 = azurerm_resource_group.RG.location
   account_tier             = "Standard"

@@ -1,46 +1,22 @@
-terraform {
-  required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-    }
-  }
-}
-
 provider "azurerm" {
   features {}
 }
+data "terraform_remote_state" "localstate"{
+  backend = "local" 
 
-#Criando um resource group - o "Exemple é o nome do RG dentro do Terraform"
-resource "azurerm_resource_group" "RG" {
-  name     = "rg-UniversidadeTerraform"
-  location = "East US"
+  config = {
+    path = "C:/Users/Alexandre/Documents/github/universidade_terraform/exercício-01/terraform.tfstate"
+  }
 }
-
-#Crianddo a VNET - Example é o nome do recurso no terraforms, o Name é o nome do recurso que irá para o azure
-resource "azurerm_virtual_network" "VNET" {
-  name                = "vnet-universidadeterraform"
-  address_space       = ["10.120.0.0/16"]
-  location            = azurerm_resource_group.RG.location
-  resource_group_name = azurerm_resource_group.RG.name
-}
-
-#Criando a Subnet - Não esquecer de botar o tipo do recurso, exemplo RG ou VNET
-resource "azurerm_subnet" "SNET" {
-  name                 = "snet-universidadeterraform"
-  resource_group_name  = azurerm_resource_group.RG.name
-  virtual_network_name = azurerm_virtual_network.VNET.name
-  address_prefixes     = ["10.120.1.0/24"]
-}
-
 #Criando a NIC
 resource "azurerm_network_interface" "NIC" {
   name                = "nic-VM-02"
-  location            = azurerm_resource_group.RG.location
-  resource_group_name = azurerm_resource_group.RG.name
+  location            = data.terraform_remote_state.localstate.outputs.RG_Location
+  resource_group_name = data.terraform_remote_state.localstate.outputs.RG_Name
 
   ip_configuration {
     name                          = "internal"
-    subnet_id                     = azurerm_subnet.SNET.id
+    subnet_id                     = data.terraform_remote_state.localstate.outputs.SNET_Id
     private_ip_address_allocation = "Dynamic"
   }
 }
@@ -52,20 +28,11 @@ resource "random_password" "password" {
   override_special = "@#$%!&"
 }
 
-#Criando STG Account
-resource "azurerm_storage_account" "STGACCOUNT" {
-  name                     = "stgbootdiagvms"
-  resource_group_name      = azurerm_resource_group.RG.name
-  location                 = azurerm_resource_group.RG.location
-  account_tier             = "Standard"
-  account_replication_type = "GRS"
-}
-
 #Criando VM
 resource "azurerm_linux_virtual_machine" "VM" {
   name                = "VM-02"
-  resource_group_name = azurerm_resource_group.RG.name
-  location            = azurerm_resource_group.RG.location
+  resource_group_name = data.terraform_remote_state.localstate.outputs.RG_Name
+  location            = data.terraform_remote_state.localstate.outputs.RG_Location
   admin_username = "adminuser"
   computer_name = "VM-02"
   disable_password_authentication = false
@@ -76,7 +43,7 @@ resource "azurerm_linux_virtual_machine" "VM" {
   ]
 
    boot_diagnostics {
-    storage_account_uri = azurerm_storage_account.STGACCOUNT.primary_blob_endpoint
+    storage_account_uri = data.terraform_remote_state.localstate.outputs.STGACCOUNT_Uri
   }
 
   os_disk {
@@ -93,22 +60,6 @@ resource "azurerm_linux_virtual_machine" "VM" {
 }
 
 #Outputs
-output "STGACCOUNT_Uri" {
-  description = "Id do Storage Account"
-  value       = azurerm_storage_account.STGACCOUNT.primary_blob_endpoint
-}
-output "RG_Name" {
-  description = "Nome do Resource Group"
-  value       = azurerm_resource_group.RG.name
-}
-output "RG_Location" {
-  description = "Location do Resource Group"
-  value       = azurerm_resource_group.RG.location
-}
-output "SNET_Id" {
-    description = "Id da SubNet"
-    value = azurerm_subnet.SNET.id
-}
 output vm_admin_passsword {
   description = "Login para usuário admin"
   value     = random_password.password.result
